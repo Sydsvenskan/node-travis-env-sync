@@ -1,0 +1,50 @@
+{
+  "name": "@hdsydsvenskan/travis-env-sync",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Syncs Travis settings and config across a large number of repositories",
+  "author": "Pelle Wessman <pelle.wessman@kodfabrik.se> (http://kodfabrik.se/)",
+  "homepage": "https://github.com/sydsvenskan/node-travis-env-sync",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sydsvenskan/node-travis-env-sync"
+  },
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "bin": {
+    "travis-env-sync": "cli.js"
+  },
+  "scripts": {
+    "dependency-check": "JS_FILES=\"*.js lib/*.js\" && dependency-check . $JS_FILES && dependency-check . $JS_FILES --unused --no-dev",
+    "test": "installed-check -e && eslint --ext .js --ext .jsx . && npm run --silent dependency-check",
+    "prepush": "npm test"
+  },
+  "devDependencies": {
+    "dependency-check": "^2.9.1",
+    "eslint": "^4.2.0",
+    "eslint-config-semistandard": "^12.0.0",
+    "eslint-config-standard": "^11.0.0-beta.0",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-node": "^5.1.0",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "husky": "^0.14.3",
+    "installed-check": "^2.1.1",
+    "nodemon": "^1.11.0"
+  },
+  "dependencies": {
+    "chalk": "^2.3.0",
+    "clone": "^2.1.1",
+    "fast-deep-equal": "^1.0.0",
+    "gh-got": "^7.0.0",
+    "github-publish": "^3.0.0",
+    "got": "^8.0.1",
+    "inquirer": "^4.0.2",
+    "js-yaml": "^3.10.0",
+    "keytar": "^4.1.0",
+    "listr": "^0.13.0",
+    "meow": "^4.0.0",
+    "ursa": "^0.9.4"
+  }
+}
