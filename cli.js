@@ -131,10 +131,23 @@ const getListrTaskForRepo = (repo, { travisToken, npmToken, gitHubToken, slackTo
     },
     {
       title: 'Set repo settings on Travis',
-      task: () => travisGot.patch(`repo/${encodedRepo}/setting/builds_only_with_travis_yml`, Object.assign({
-        body: { 'setting.value': true }
-      }, baseTravisGotOptions))
-        .then(() => {})
+      task: () => new Listr([
+        {
+          title: 'Only build when there\'s a .travis.yml file',
+          task: () => travisGot.patch(`repo/${encodedRepo}/setting/builds_only_with_travis_yml`, Object.assign({
+            body: { 'setting.value': true }
+          }, baseTravisGotOptions))
+            .then(() => {})
+        },
+        // TODO: Make optional
+        {
+          title: 'Set a weekly cron on master',
+          task: () => travisGot.post(`repo/${encodedRepo}/branch/master/cron`, Object.assign({
+            body: { 'cron.interval': 'weekly', 'cron.dont_run_if_recent_build_exists': true }
+          }, baseTravisGotOptions))
+            .then(() => {})
+        }
+      ], { concurrent: true })
     },
     {
       title: 'Set env variable on Travis',
@@ -143,6 +156,7 @@ const getListrTaskForRepo = (repo, { travisToken, npmToken, gitHubToken, slackTo
           title: 'Fetch existing env variables',
           task: (ctx, task) => travisGot(`repo/${encodedRepo}/env_vars`, baseTravisGotOptions)
             .then(result => {
+              // TODO: Make more generic + also verify it works
               context.npmEnvVar = result.body.env_vars.find(item => item.name === 'NPM_TOKEN');
               task.title = task.title + ': ' + (context.npmEnvVar ? chalk.green('Found') : chalk.red('Not found'));
             })
