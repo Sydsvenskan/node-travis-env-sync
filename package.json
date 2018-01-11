@@ -43,10 +43,12 @@
     "got": "^8.0.1",
     "inquirer": "^4.0.2",
     "js-yaml": "^3.10.0",
-    "keytar": "^4.1.0",
     "listr": "^0.13.0",
     "meow": "^4.0.0",
     "ursa": "^0.9.4",
     "util.promisify": "^1.0.0"
+  },
+  "optionalDependencies": {
+    "keytar": "^4.1.0"
   }
 }
