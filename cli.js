@@ -54,18 +54,17 @@ const cli = meow(`
     Examples
       $ travis-env-sync -k </path/to/conf.yml>
 `, {
-    flags: {
-      keychain: {
-        type: 'boolean',
-        alias: 'k'
-      },
-      reset: {
-        type: 'boolean',
-        alias: 'r'
-      }
+  flags: {
+    keychain: {
+      type: 'boolean',
+      alias: 'k'
+    },
+    reset: {
+      type: 'boolean',
+      alias: 'r'
     }
   }
-);
+});
 
 const configFilePath = cli.input[0];
 const useKeychain = keytar && cli.flags.keychain;
