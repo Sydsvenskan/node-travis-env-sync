@@ -36,7 +36,7 @@
   "dependencies": {
     "chalk": "^2.3.0",
     "clone": "^2.1.1",
-    "fast-deep-equal": "^1.0.0",
+    "fast-deep-equal": "^2.0.0",
     "get-stdin": "^5.0.1",
     "gh-got": "^7.0.0",
     "github-publish": "^3.0.0",
