@@ -10,7 +10,7 @@
     "url": "git://github.com/sydsvenskan/node-travis-env-sync"
   },
   "engines": {
-    "node": ">=6.0.0"
+    "node": "^8.10.0 || >=9.10.0"
   },
   "bin": {
     "travis-env-sync": "cli.js"
