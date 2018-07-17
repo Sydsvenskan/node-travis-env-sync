@@ -103,7 +103,9 @@ const getTokens = (tokens) => {
         .then(promptResults => {
           if (useKeychain) {
             Object.keys(promptResults).forEach(resultName => {
-              keytar.setPassword(KEYCHAIN_SERVICE, tokens[resultName][0], promptResults[resultName]);
+              if (promptResults[resultName]) {
+                keytar.setPassword(KEYCHAIN_SERVICE, tokens[resultName][0], promptResults[resultName]);
+              }
             });
           }
           return Object.assign(result, promptResults);
