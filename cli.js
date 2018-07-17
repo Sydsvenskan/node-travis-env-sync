@@ -163,7 +163,7 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
       task: () => new Listr([
         {
           title: 'Fetch existing env variables',
-          task: (ctx, task) => travisGot(`repo/${encodedRepo}/env_vars`, baseTravisGotOptions)
+          task: () => travisGot(`repo/${encodedRepo}/env_vars`, baseTravisGotOptions)
             .then(result => {
               const secretEnvVars = config.secret_env_vars || [];
 
@@ -177,7 +177,7 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
         },
         {
           title: 'Set secret env variables',
-          task: (ctx, task) => new Listr((config.secret_env_vars || []).map(envVar => {
+          task: () => new Listr((config.secret_env_vars || []).map(envVar => {
             return {
               title: 'Set ' + envVar,
               task: (ctx, task) => {
