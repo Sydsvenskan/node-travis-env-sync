@@ -48,8 +48,9 @@ const cli = meow(`
       $ travis-env-sync <configuration-file>
 
     Options
-      --keychain, -k      Use tokens from keychain
-      --reset, -r         Reset tokens in keychain
+      --keychain, -k       Use tokens from keychain
+      --reset, -r          Reset tokens in keychain
+      --fail-on-update -f  Fail, rather than replace, an out of sync existing .travis.yml in a repository
 
     Examples
       $ travis-env-sync -k </path/to/conf.yml>
@@ -62,16 +63,37 @@ const cli = meow(`
     reset: {
       type: 'boolean',
       alias: 'r'
+    },
+    'fail-on-update': {
+      type: 'boolean',
+      alias: 'f'
     }
   }
 });
 
 const configFilePath = cli.input[0];
 const useKeychain = keytar && cli.flags.keychain;
+const { failOnUpdate, reset } = cli.flags;
+
+/**
+ * Error message used for failures to update
+ *
+ * Only used when the failOnUpdate flag has been set
+ *
+ * @class FailUpdateError
+ * @extends {Error}
+ */
+class FailUpdateError extends Error {
+  constructor (repo) {
+    super(`${repo} is out of sync`);
+    this.name = 'FailUpdateError';
+    this.repo = repo;
+  }
+}
 
 const getTokens = (tokens) => {
   return (useKeychain ? keytar.findCredentials(KEYCHAIN_SERVICE) : Promise.resolve([]))
-    .then(result => cli.flags.reset
+    .then(result => reset
       ? Promise.all(result.map(item => keytar.deletePassword(KEYCHAIN_SERVICE, item.account)))
         .then(() => ({}))
       : result.reduce((result, item) => {
@@ -113,6 +135,13 @@ const getTokens = (tokens) => {
     });
 };
 
+/**
+ * Creates a Listr task for the specified repository
+ *
+ * @param {String} repo the name of the GitHub repository
+ * @param {*} { config, tokens }
+ * @returns
+ */
 const getListrTaskForRepo = (repo, { config, tokens }) => {
   const { travisToken, gitHubToken, slackToken } = tokens;
   const context = {};
@@ -223,6 +252,7 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
                 .then(({ content, sha }) => {
                   if (!content) { return; }
 
+                  // TODO: Ignore if "force" flag is set
                   if (content.startsWith(TRAVIS_YAML_AUTO_CREATED_COMMENT)) {
                     context.currentTravisFile = yaml.safeLoad(content);
                     context.currentTravisSha = sha;
@@ -279,6 +309,10 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
             return deepEqual(secretLessNew, secretLessCurrent);
           },
           task: () => {
+            if (failOnUpdate) {
+              return Promise.reject(new FailUpdateError(repo));
+            }
+
             const yamlData = TRAVIS_YAML_AUTO_CREATED_COMMENT +
               yaml.safeDump(context.newTravisFile);
 
@@ -332,15 +366,31 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
           title: `Repo ${key}`,
           task: () => getListrTaskForRepo(key, { config, tokens })
         })),
-        { concurrent: 3 }
+        { concurrent: 3, exitOnError: false }
       )
     }
   ]))
   .then(tasks => tasks.run())
   // .catch(err => {
-  //   console.log('😱', err);
+  //   console.log('😱', err.stack, err.errors);
   //   return Promise.reject(err);
   // })
-  .catch(() => {
+  .catch(err => {
+    console.error('\n' + chalk.red.underline.bold('Encountered some errors:') + '\n');
+
+    if (err.name === 'ListrError' && err.errors) {
+      err.errors.forEach(subError => {
+        if (subError instanceof FailUpdateError) {
+          console.error(`${chalk.red(subError.repo)} is out of sync`);
+        } else {
+          console.error(`${chalk.red('Error')}: ${err.name}: ${err.message}`);
+        }
+      });
+    } else {
+      console.error(`${chalk.red('Error')}: ${err.name}: ${err.message}`);
+    }
+
+    console.error('');
+
     process.exit(1);
   });
