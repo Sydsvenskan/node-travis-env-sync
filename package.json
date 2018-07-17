@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "license": "MIT",
   "description": "Syncs Travis settings and .travis.yml across a large number of repositories",
-  "author": "Pelle Wessman <pelle.wessman@kodfabrik.se> (http://kodfabrik.se/)",
+  "author": "Pelle Wessman <pelle.wessman@hdsydsvenskan.se>",
   "homepage": "https://github.com/sydsvenskan/node-travis-env-sync",
   "repository": {
     "type": "git",
