@@ -358,7 +358,7 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
             return isEqual;
           },
           task: () => {
-            if (failOnUpdate) {
+            if (context.currentTravisFile && failOnUpdate) {
               return Promise.reject(new FailUpdateError(repo, { diff: context.diff }));
             }
 
