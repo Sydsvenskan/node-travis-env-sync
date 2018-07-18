@@ -1,6 +1,6 @@
 {
   "name": "@hdsydsvenskan/travis-env-sync",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "license": "MIT",
   "description": "Syncs Travis settings and .travis.yml across a large number of repositories",
   "author": "Pelle Wessman <pelle.wessman@hdsydsvenskan.se>",
