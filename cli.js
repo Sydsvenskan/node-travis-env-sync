@@ -64,11 +64,14 @@ class FailUpdateError extends Error {
    * @param {object} options
    * @param {string} options.diff the diff that's the cause of the failure – if any
    */
-  constructor (repo, { diff } = {}) {
+  constructor (repo, { diff, notOwned } = {}) {
     super(`${repo} is out of sync`);
     this.name = 'FailUpdateError';
+
     this.repo = repo;
+
     this.diff = diff;
+    this.notOwned = notOwned;
   }
 }
 
@@ -296,6 +299,7 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
                     context.currentTravisSha = sha;
 
                     if (!ownsCurrentTravisFile) {
+                      context.doesNotOwnTravisFile = true;
                       task.title = task.title + ' ' + chalk.inverse('(not created by Travis Env Sync)');
                     }
                   } else {
@@ -355,11 +359,16 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
               context.diff = jsonDiff.diffString(secretLessCurrent, secretLessNew);
             }
 
+            if (isEqual && context.doesNotOwnTravisFile) { return false; }
+
             return isEqual;
           },
           task: () => {
             if (context.currentTravisFile && failOnUpdate) {
-              return Promise.reject(new FailUpdateError(repo, { diff: context.diff }));
+              return Promise.reject(new FailUpdateError(repo, {
+                diff: context.diff,
+                notOwned: context.doesNotOwnTravisFile
+              }));
             }
 
             const yamlData = TRAVIS_YAML_AUTO_CREATED_COMMENT +
@@ -431,8 +440,17 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
       err.errors.forEach(subError => {
         if (subError instanceof FailUpdateError) {
           console.error(`${chalk.red(subError.repo)} is out of sync`);
-          if (subError.diff) {
-            console.error(subError.diff);
+
+          if (subError.notOwned) {
+            console.error(chalk.bold(".travis.yml file wasn't created by Travis Env Sync!"));
+          }
+
+          if (diffFlag) {
+            console.error(subError.diff ? subError.diff.trim() : chalk.dim('(content is up to date)'));
+          }
+
+          if (subError.notOwned || diffFlag) {
+            console.error('');
           }
         } else {
           console.error(`${chalk.red('Error')}: ${err.name}: ${err.message}`);
