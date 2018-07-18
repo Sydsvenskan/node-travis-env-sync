@@ -48,14 +48,19 @@ const cli = meow(`
       $ travis-env-sync <configuration-file>
 
     Options
-      --keychain, -k       Use tokens from keychain
-      --reset, -r          Reset tokens in keychain
-      --fail-on-update -f  Fail, rather than replace, an out of sync existing .travis.yml in a repository
+      --keychain, -k        Use tokens from keychain
+      --reset, -r           Reset tokens in keychain
+      --all, a              Accept existing .travis.yml files that don't contain the Travis Env Sync comment at the top
+      --error-on-update -e  Error when encountering an out of sync existing .travis.yml in a repository, rather than replacing it
 
     Examples
       $ travis-env-sync -k </path/to/conf.yml>
 `, {
   flags: {
+    all: {
+      type: 'boolean',
+      alias: 'a'
+    },
     keychain: {
       type: 'boolean',
       alias: 'k'
@@ -64,16 +69,20 @@ const cli = meow(`
       type: 'boolean',
       alias: 'r'
     },
-    'fail-on-update': {
+    'error-on-update': {
       type: 'boolean',
-      alias: 'f'
+      alias: 'e'
     }
   }
 });
 
 const configFilePath = cli.input[0];
 const useKeychain = keytar && cli.flags.keychain;
-const { failOnUpdate, reset } = cli.flags;
+const {
+  all: allFlag,
+  errorOnUpdate: failOnUpdate,
+  reset
+} = cli.flags;
 
 /**
  * Error message used for failures to update
@@ -138,7 +147,7 @@ const getTokens = (tokens) => {
 /**
  * Creates a Listr task for the specified repository
  *
- * @param {String} repo the name of the GitHub repository
+ * @param {string} repo the name of the GitHub repository
  * @param {*} { config, tokens }
  * @returns
  */
@@ -245,17 +254,22 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
       task: () => new Listr([
         {
           title: 'Fetch required data',
-          task: () => new Listr([
+          task: (ctx, task) => new Listr([
             {
               title: 'Fetch current file',
               task: () => ghPublisher.retrieve('.travis.yml')
                 .then(({ content, sha }) => {
                   if (!content) { return; }
 
-                  // TODO: Ignore if "force" flag is set
-                  if (content.startsWith(TRAVIS_YAML_AUTO_CREATED_COMMENT)) {
+                  const ownsCurrentTravisFile = content.startsWith(TRAVIS_YAML_AUTO_CREATED_COMMENT);
+
+                  if (allFlag || ownsCurrentTravisFile) {
                     context.currentTravisFile = yaml.safeLoad(content);
                     context.currentTravisSha = sha;
+
+                    if (!ownsCurrentTravisFile) {
+                      task.title = task.title + ' ' + chalk.inverse('(not created by Travis Env Sync)');
+                    }
                   } else {
                     context.skipTravisFileUpdate = true;
                   }
