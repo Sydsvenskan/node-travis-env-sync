@@ -15,7 +15,7 @@ const deepEqual = require('fast-deep-equal');
 const promisify = require('util.promisify');
 const fs = require('fs');
 const getStdin = require('get-stdin');
-// const foo = require('.');
+const jsonDiff = require('json-diff');
 
 const pkg = require('./package.json');
 
@@ -35,6 +35,12 @@ const headers = Object.freeze({
   'User-Agent': userAgent
 });
 
+/**
+ * Takes a .travis.yml fil and strips the encrypted parts of it (as the encrypted part can't be diffed)
+ *
+ * @param {string} file the contents of a .travis.yml
+ * @returns {string} the secret-less file contents
+ */
 const getSecretLessTravisFile = (file) => {
   const result = clone(file);
 
@@ -44,6 +50,28 @@ const getSecretLessTravisFile = (file) => {
   return result;
 };
 
+/**
+ * Error message used for failures to update
+ *
+ * Only used when the failOnUpdate flag has been set
+ *
+ * @class FailUpdateError
+ * @extends {Error}
+ */
+class FailUpdateError extends Error {
+  /**
+   * @param {string} repo name of repository that the error relates to
+   * @param {object} options
+   * @param {string} options.diff the diff that's the cause of the failure – if any
+   */
+  constructor (repo, { diff } = {}) {
+    super(`${repo} is out of sync`);
+    this.name = 'FailUpdateError';
+    this.repo = repo;
+    this.diff = diff;
+  }
+}
+
 const cli = meow(`
     Usage
       $ travis-env-sync <configuration-file>
@@ -51,8 +79,9 @@ const cli = meow(`
     Options
       --keychain, -k        Use tokens from keychain
       --reset, -r           Reset tokens in keychain
-      --all, a              Accept existing .travis.yml files that don't contain the Travis Env Sync comment at the top
+      --all, -a             Accept existing .travis.yml files that don't contain the Travis Env Sync comment at the top
       --error-on-update -e  Error when encountering an out of sync existing .travis.yml in a repository, rather than replacing it
+      --diff -d             Show diffs when --error-on-update errors
 
     Examples
       $ travis-env-sync -k </path/to/conf.yml>
@@ -61,6 +90,10 @@ const cli = meow(`
     all: {
       type: 'boolean',
       alias: 'a'
+    },
+    diff: {
+      type: 'boolean',
+      alias: 'd'
     },
     keychain: {
       type: 'boolean',
@@ -82,25 +115,15 @@ const useKeychain = keytar && cli.flags.keychain;
 const {
   all: allFlag,
   errorOnUpdate: failOnUpdate,
+  diff: diffFlag,
   reset
 } = cli.flags;
 
 /**
- * Error message used for failures to update
+ * Resolves needed tokens
  *
- * Only used when the failOnUpdate flag has been set
- *
- * @class FailUpdateError
- * @extends {Error}
+ * @param {Array.<Array.<string>>} tokens list of tokens to resolve. Strings should be in the order of: tokenIdentifier, tokenDescription, [envVar]
  */
-class FailUpdateError extends Error {
-  constructor (repo) {
-    super(`${repo} is out of sync`);
-    this.name = 'FailUpdateError';
-    this.repo = repo;
-  }
-}
-
 const getTokens = (tokens) => {
   return (useKeychain ? keytar.findCredentials(KEYCHAIN_SERVICE) : Promise.resolve([]))
     .then(result => reset
@@ -151,8 +174,10 @@ const getTokens = (tokens) => {
  * Creates a Listr task for the specified repository
  *
  * @param {string} repo the name of the GitHub repository
- * @param {*} { config, tokens }
- * @returns
+ * @param {Object} options
+ * @param {Object<string,any>} options.config
+ * @param {Object<string,string>} options.token
+ * @returns {Listr} the created Listr task for the repository
  */
 const getListrTaskForRepo = (repo, { config, tokens }) => {
   const { travisToken, gitHubToken, slackToken } = tokens;
@@ -317,17 +342,24 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
         {
           title: 'Push .travis.yml if changed',
           skip: () => {
+            // TODO: Handle the case of an uncontrolled file
             if (context.skipTravisFileUpdate) { return true; }
             if (!context.currentTravisFile) { return false; }
 
             const secretLessNew = getSecretLessTravisFile(context.newTravisFile);
             const secretLessCurrent = getSecretLessTravisFile(context.currentTravisFile);
 
-            return deepEqual(secretLessNew, secretLessCurrent);
+            const isEqual = deepEqual(secretLessNew, secretLessCurrent);
+
+            if (!isEqual && diffFlag) {
+              context.diff = jsonDiff.diffString(secretLessCurrent, secretLessNew);
+            }
+
+            return isEqual;
           },
           task: () => {
             if (failOnUpdate) {
-              return Promise.reject(new FailUpdateError(repo));
+              return Promise.reject(new FailUpdateError(repo, { diff: context.diff }));
             }
 
             const yamlData = TRAVIS_YAML_AUTO_CREATED_COMMENT +
@@ -399,6 +431,9 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
       err.errors.forEach(subError => {
         if (subError instanceof FailUpdateError) {
           console.error(`${chalk.red(subError.repo)} is out of sync`);
+          if (subError.diff) {
+            console.error(subError.diff);
+          }
         } else {
           console.error(`${chalk.red('Error')}: ${err.name}: ${err.message}`);
         }
