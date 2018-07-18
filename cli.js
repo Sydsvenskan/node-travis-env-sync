@@ -115,12 +115,14 @@ const getTokens = (tokens) => {
       const prompts = [];
 
       Object.keys(tokens).forEach(resultName => {
-        const [ tokenIdentifier, tokenDescription ] = tokens[resultName] || [];
+        const [ tokenIdentifier, tokenDescription, envVar ] = tokens[resultName] || [];
 
         if (!tokenIdentifier) { return; }
 
         if (credentials[tokenIdentifier]) {
           result[resultName] = credentials[tokenIdentifier];
+        } else if (envVar && process.env[envVar]) {
+          result[resultName] = process.env[envVar];
         } else {
           prompts.push({
             type: 'password',
@@ -345,12 +347,12 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
   .then(yamlContent => yaml.safeLoad(yamlContent))
   .then(config => {
     const tokens = {
-      travisToken: ['Travis Access Token', 'Travis Access Token'],
-      gitHubToken: ['GitHub Write Access Token', 'GitHub Write Access Token'],
-      slackToken: config.slack ? ['Slack Token', 'Slack Token'] : false
+      travisToken: ['Travis Access Token', 'Travis Access Token', 'TRAVIS_ENV_SYNC_TRAVIS_TOKEN'],
+      gitHubToken: ['GitHub Write Access Token', 'GitHub Write Access Token', 'TRAVIS_ENV_SYNC_GITHUB_TOKEN'],
+      slackToken: config.slack ? ['Slack Token', 'Slack Token', 'TRAVIS_ENV_SYNC_SLACK_TOKEN'] : false
     };
     (config.secret_env_vars || []).forEach(value => {
-      tokens[ENV_VAR_TOKEN_PREFIX + value] = ['Env variable ' + value, 'Env variable ' + value];
+      tokens[ENV_VAR_TOKEN_PREFIX + value] = ['Env variable ' + value, 'Env variable ' + value, 'TRAVIS_ENV_SYNC_' + value];
     });
     return getTokens(tokens)
       .then(tokens => ({ config, tokens }));
