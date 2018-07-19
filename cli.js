@@ -50,6 +50,14 @@ const getSecretLessTravisFile = (file) => {
   return result;
 };
 
+const setSetting = (encodedRepo, settingName, baseTravisGotOptions) => {
+  return travisGot.patch(
+    `repo/${encodedRepo}/setting/${settingName}`,
+    Object.assign({ body: { 'setting.value': true } }, baseTravisGotOptions)
+  )
+    .then(() => {});
+};
+
 /**
  * Error message used for failures to update
  *
@@ -203,13 +211,32 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
     {
       title: 'Set repo settings on Travis',
       task: () => {
-        const tasks = [{
-          title: 'Only build when there\'s a .travis.yml file',
-          task: () => travisGot.patch(`repo/${encodedRepo}/setting/builds_only_with_travis_yml`, Object.assign({
-            body: { 'setting.value': true }
-          }, baseTravisGotOptions))
-            .then(() => {})
-        }];
+        const tasks = [
+          {
+            title: 'Only build when there\'s a .travis.yml file',
+            task: () => setSetting(
+              encodedRepo,
+              'builds_only_with_travis_yml',
+              baseTravisGotOptions
+            )
+          },
+          {
+            title: 'Auto-cancel branches',
+            task: () => setSetting(
+              encodedRepo,
+              'auto_cancel_pushes',
+              baseTravisGotOptions
+            )
+          },
+          {
+            title: 'Auto-cancel PR:s',
+            task: () => setSetting(
+              encodedRepo,
+              'auto_cancel_pull_requests',
+              baseTravisGotOptions
+            )
+          }
+        ];
 
         if (config.cron) {
           tasks.push({
@@ -224,7 +251,7 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
           });
         }
 
-        return new Listr(tasks, { concurrent: true });
+        return new Listr(tasks, { concurrent: 2 });
       }
     },
     {
