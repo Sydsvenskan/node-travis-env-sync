@@ -17,8 +17,12 @@
   },
   "scripts": {
     "dependency-check": "JS_FILES=\"*.js lib/*.js\" && dependency-check . $JS_FILES && dependency-check . $JS_FILES --unused --no-dev",
-    "test": "installed-check -e && eslint --ext .js --ext .jsx . && npm run --silent dependency-check",
-    "prepush": "npm test"
+    "test": "installed-check -e && eslint --ext .js --ext .jsx . && npm run --silent dependency-check"
+  },
+  "husky": {
+    "hooks": {
+      "pre-push": "npm test"
+    }
   },
   "devDependencies": {
     "dependency-check": "3.2.1",
@@ -28,7 +32,7 @@
     "eslint-plugin-node": "^7.0.1",
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-standard": "^4.0.0",
-    "husky": "0.14.3",
+    "husky": "^1.0.1",
     "installed-check": "2.2.0"
   },
   "dependencies": {
