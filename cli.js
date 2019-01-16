@@ -12,6 +12,7 @@ const rsa = require('ursa');
 const yaml = require('js-yaml');
 const clone = require('clone');
 const deepEqual = require('fast-deep-equal');
+const deepMerge = require('deepmerge');
 const promisify = require('util.promisify');
 const fs = require('fs');
 const getStdin = require('get-stdin');
@@ -93,6 +94,7 @@ const cli = meow(`
       --all, -a             Accept existing .travis.yml files that don't contain the Travis Env Sync comment at the top
       --error-on-update -e  Error when encountering an out of sync existing .travis.yml in a repository, rather than replacing it
       --diff -d             Show diffs when --error-on-update errors
+      --dry-run,            Runs everything as normal, but doesn't do any changes
 
     Examples
       $ travis-env-sync -k </path/to/conf.yml>
@@ -117,6 +119,9 @@ const cli = meow(`
     'error-on-update': {
       type: 'boolean',
       alias: 'e'
+    },
+    'dry-run': {
+      type: 'boolean'
     }
   }
 });
@@ -127,7 +132,8 @@ const {
   all: allFlag,
   errorOnUpdate: failOnUpdate,
   diff: diffFlag,
-  reset
+  reset,
+  dryRun
 } = cli.flags;
 
 /**
@@ -241,7 +247,7 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
         if (config.cron) {
           tasks.push({
             title: 'Set cron on master',
-            task: () => travisGot.post(`repo/${encodedRepo}/branch/master/cron`, Object.assign({
+            task: () => dryRun ? Promise.resolve() : travisGot.post(`repo/${encodedRepo}/branch/master/cron`, Object.assign({
               body: {
                 'cron.interval': config.cron,
                 'cron.dont_run_if_recent_build_exists': true
@@ -293,7 +299,7 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
 
                 task.title = 'Add ' + envVar;
 
-                return travisGot.post(`repo/${encodedRepo}/env_vars`, Object.assign({ body }, baseTravisGotOptions))
+                return dryRun ? Promise.resolve() : travisGot.post(`repo/${encodedRepo}/env_vars`, Object.assign({ body }, baseTravisGotOptions))
                   .then(() => {});
               }
             };
@@ -304,7 +310,7 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
     {
       title: 'Activate repo on Travis',
       skip: () => context.active === true,
-      task: () => travisGot.post(`repo/${encodedRepo}/activate`, baseTravisGotOptions)
+      task: () => dryRun ? Promise.resolve() : travisGot.post(`repo/${encodedRepo}/activate`, baseTravisGotOptions)
         .then(() => {})
     },
     {
@@ -401,7 +407,7 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
             const yamlData = TRAVIS_YAML_AUTO_CREATED_COMMENT +
               yaml.safeDump(context.newTravisFile);
 
-            return ghPublisher.publish('.travis.yml', yamlData, {
+            return dryRun ? Promise.resolve() : ghPublisher.publish('.travis.yml', yamlData, {
               sha: context.currentTravisSha,
               message: 'updating Travis CI conf through travis-env-sync'
             });
@@ -447,11 +453,24 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
     {
       title: 'Updating repository setups',
       task: () => new Listr(
-        (config.repos || []).map(key => ({
-          title: `Repo ${key}`,
-          task: () => getListrTaskForRepo(key, { config, tokens })
+        (config.groups || [config]).map((subConfig, i) => ({
+          title: `Syncing group: ${subConfig.name || i}`,
+          task: () => new Listr(
+            (subConfig.repos || []).map(key => ({
+              title: `Repo ${key}`,
+              task: () => getListrTaskForRepo(key, {
+                config: deepMerge(
+                  config.config || {},
+                  subConfig.config || subConfig,
+                  { arrayMerge: (destinationArray, sourceArray, options) => sourceArray }
+                ),
+                tokens
+              })
+            })),
+            { concurrent: 3, exitOnError: false }
+          )
         })),
-        { concurrent: 3, exitOnError: false }
+        { exitOnError: false }
       )
     }
   ]))
