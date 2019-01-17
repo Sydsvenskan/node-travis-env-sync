@@ -59,6 +59,12 @@ const setSetting = (encodedRepo, settingName, baseTravisGotOptions) => {
     .then(() => {});
 };
 
+const ensureSlackNotificationScaffold = (travisYaml) => {
+  travisYaml.notifications = travisYaml.notifications || {};
+  travisYaml.notifications.slack = travisYaml.notifications.slack || {};
+  travisYaml.notifications.slack.rooms = travisYaml.notifications.slack.rooms || {};
+};
+
 /**
  * Error message used for failures to update
  *
@@ -203,7 +209,7 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
   const [repoOwner, repoName] = repo.split('/');
   const baseTravisGotOptions = Object.freeze({ token: travisToken, private: !!config.private_travis, headers });
   const ghPublisher = new GitHubPublisher(gitHubToken, repoOwner, repoName);
-  const skipSlackNotification = !slackToken || !config.slack;
+  const skipSlackNotification = !slackToken || slackToken.trim() === '' || !config.slack;
 
   return new Listr([
     {
@@ -282,6 +288,7 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
           task: () => new Listr((config.secret_env_vars || []).map(envVar => {
             return {
               title: 'Set ' + envVar,
+              skip: () => context.existingSecretEnvVars[envVar] && (!tokens[ENV_VAR_TOKEN_PREFIX + envVar] || tokens[ENV_VAR_TOKEN_PREFIX + envVar].trim() === ''),
               task: (ctx, task) => {
                 const body = {
                   'env_var.name': envVar,
@@ -293,7 +300,7 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
 
                 if (existing) {
                   task.title = 'Update ' + envVar;
-                  return travisGot.patch(`repo/${encodedRepo}/env_var/${existing.id}`, Object.assign({ body }, baseTravisGotOptions))
+                  return dryRun ? Promise.resolve() : travisGot.patch(`repo/${encodedRepo}/env_var/${existing.id}`, Object.assign({ body }, baseTravisGotOptions))
                     .then(() => {});
                 }
 
@@ -362,15 +369,18 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
           skip: () => context.skipTravisFileUpdate,
           task: () => {
             const travisYaml = clone(config.travis);
+            const { currentTravisFile } = context;
 
             if (context.encryptedSlackCredentials) {
-              travisYaml.notifications = travisYaml.notifications || {};
-              travisYaml.notifications.slack = travisYaml.notifications.slack || {};
-              travisYaml.notifications.slack.rooms = travisYaml.notifications.slack.rooms || {};
+              ensureSlackNotificationScaffold(travisYaml);
+              travisYaml.notifications.slack.rooms = [{ secure: context.encryptedSlackCredentials }];
+            } else if (config.slack && currentTravisFile.notifications) {
+              const currentRooms = ((currentTravisFile.notifications || {}).slack || {}).rooms;
 
-              travisYaml.notifications.slack.rooms = [
-                { secure: context.encryptedSlackCredentials }
-              ];
+              if (currentRooms) {
+                ensureSlackNotificationScaffold(travisYaml);
+                travisYaml.notifications.slack.rooms = currentRooms;
+              }
             }
 
             context.newTravisFile = travisYaml;
@@ -424,9 +434,9 @@ const getListrTaskForRepo = (repo, { config, tokens }) => {
     const tokens = {
       travisToken: ['Travis Access Token', 'Travis Access Token', ENV_CONFIG_PREFIX + 'TRAVIS_TOKEN'],
       gitHubToken: ['GitHub Write Access Token', 'GitHub Write Access Token', ENV_CONFIG_PREFIX + 'GITHUB_TOKEN'],
-      slackToken: config.slack ? ['Slack Token', 'Slack Token', ENV_CONFIG_PREFIX + 'SLACK_TOKEN'] : false
+      slackToken: (config.config || config).slack ? ['Slack Token', 'Slack Token', ENV_CONFIG_PREFIX + 'SLACK_TOKEN'] : false
     };
-    (config.secret_env_vars || []).forEach(value => {
+    ((config.config || config).secret_env_vars || []).forEach(value => {
       tokens[ENV_VAR_TOKEN_PREFIX + value] = ['Env variable ' + value, 'Env variable ' + value, ENV_CONFIG_PREFIX + value];
     });
     return getTokens(tokens)
