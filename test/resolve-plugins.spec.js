@@ -1,7 +1,10 @@
 'use strict';
 
 const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
 const sinon = require('sinon');
+
+chai.use(chaiAsPromised);
 
 const should = chai.should();
 
@@ -20,26 +23,28 @@ describe('Resolve Plugins', function () {
 
   describe('resolvePluginTree()', () => {
     describe('basic', () => {
-      it('should require plugin list to be an array', () => {
-        should.Throw(() => { resolvePluginTree(); }, /Expected plugins to be an array of strings/);
+      it('should require plugin list to be an array',() => {
+        return resolvePluginTree()
+          .should.be.rejectedWith(/Expected plugins to be an array of strings/);
       });
 
       it('should require loadPlugin to be a function', () => {
-        should.Throw(() => { resolvePluginTree(['foo']); }, /Expected loadPlugin to be a function/);
+        return resolvePluginTree(['foo'])
+          .should.be.rejectedWith(/Expected loadPlugin to be a function/);
       });
 
-      it('should return an empty plugin list straight up', () => {
-        const result = resolvePluginTree([], loadPluginStub);
+      it('should return an empty plugin list straight up', async () => {
+        const result = await resolvePluginTree([], loadPluginStub);
         should.exist(result);
         result.should.deep.equal([]);
       });
 
-      it('should handle a simple single dependency free plugin', () => {
+      it('should handle a simple single dependency free plugin', async () => {
         const plugin = {};
 
         loadPluginStub.onFirstCall().returns(plugin);
 
-        const result = resolvePluginTree(['foo'], loadPluginStub);
+        const result = await resolvePluginTree(['foo'], loadPluginStub);
         should.exist(result);
         result.should.have.property(0, plugin);
       });
@@ -51,31 +56,28 @@ describe('Resolve Plugins', function () {
         loadPluginStub.onSecondCall().returns({});
         loadPluginStub.onThirdCall().returns(undefined);
 
-        should.Throw(() => {
-          resolvePluginTree(['foo', 'bar', 'abc'], loadPluginStub);
-        }, /Plugins missing: "foo", "abc"/);
+        return resolvePluginTree(['foo', 'bar', 'abc'], loadPluginStub)
+          .should.be.rejectedWith(/Plugins missing: "foo", "abc"/);
       });
 
       it('should handle single missing dependency', () => {
         loadPluginStub.onFirstCall().returns({});
         loadPluginStub.onSecondCall().returns(undefined);
 
-        should.Throw(() => {
-          resolvePluginTree(['foo', 'bar'], loadPluginStub);
-        }, /Plugin missing: "bar"/);
+        return resolvePluginTree(['foo', 'bar'], loadPluginStub)
+          .should.be.rejectedWith(/Plugin missing: "bar"/);
       });
 
       it('should wrap errors thrown when loading', () => {
         loadPluginStub.throws();
 
-        should.Throw(() => {
-          resolvePluginTree(['foo'], loadPluginStub);
-        }, /Failed to load plugin "foo"/);
+        return resolvePluginTree(['foo'], loadPluginStub)
+          .should.be.rejectedWith(/Failed to load plugin "foo"/);
       });
     });
 
     describe('dependency tree', () => {
-      it('should load subdependencies and order dependencies to fulfill prior dependencies', () => {
+      it('should load subdependencies and order dependencies to fulfill prior dependencies', async () => {
         loadPluginStub.withArgs('foo').returns({
           name: 'foo',
           plugins: ['xyz', 'abc']
@@ -91,7 +93,7 @@ describe('Resolve Plugins', function () {
           name: 'bar'
         });
 
-        const result = resolvePluginTree(['foo', 'bar'], loadPluginStub);
+        const result = await resolvePluginTree(['foo', 'bar'], loadPluginStub);
         should.exist(result);
         result.should.deep.equal([
           {
@@ -126,9 +128,8 @@ describe('Resolve Plugins', function () {
           plugins: ['foo']
         });
 
-        should.Throw(() => {
-          resolvePluginTree(['foo'], loadPluginStub);
-        }, /Failed to add plugin "bar"/);
+        return resolvePluginTree(['foo'], loadPluginStub)
+          .should.be.rejectedWith(/Failed to add plugin "bar"/);
       });
     });
   });

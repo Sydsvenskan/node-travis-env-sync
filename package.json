@@ -30,10 +30,12 @@
   },
   "devDependencies": {
     "@hdsydsvenskan/eslint-config-hds": "^12.1.0",
+    "@types/chai-as-promised": "^7.1.0",
     "@types/clone": "^0.1.30",
     "@types/got": "^9.6.5",
     "@types/node": "^12.6.8",
     "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
     "dependency-check": "^4.1.0",
     "eslint": "^6.1.0",
     "eslint-config-standard": "^13.0.1",
