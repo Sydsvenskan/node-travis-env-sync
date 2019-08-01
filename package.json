@@ -1,19 +1,19 @@
 {
-  "name": "@hdsydsvenskan/travis-env-sync",
+  "name": "@hdsydsvenskan/env-sync",
   "version": "1.5.1",
   "license": "MIT",
-  "description": "Syncs Travis settings and .travis.yml across a large number of repositories",
+  "description": "Syncs settings and files across a large number of repositories and services",
   "author": "Pelle Wessman <pelle.wessman@hdsydsvenskan.se>",
-  "homepage": "https://github.com/sydsvenskan/node-travis-env-sync",
+  "homepage": "https://github.com/sydsvenskan/node-env-sync",
   "repository": {
     "type": "git",
-    "url": "git://github.com/sydsvenskan/node-travis-env-sync"
+    "url": "git://github.com/sydsvenskan/node-env-sync"
   },
   "engines": {
-    "node": "^8.10.0 || >=9.10.0"
+    "node": ">=10.0.0"
   },
   "bin": {
-    "travis-env-sync": "cli.js"
+    "envsync": "cli.js"
   },
   "scripts": {
     "dependency-check": "JS_FILES=\"*.js lib/*.js\" && dependency-check . $JS_FILES && dependency-check . $JS_FILES --unused --no-dev",
