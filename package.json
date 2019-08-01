@@ -49,7 +49,7 @@
     "json-diff": "^0.5.2",
     "listr": "^0.14.0",
     "meow": "^5.0.0",
-    "ursa": "^0.9.4",
+    "strong-ursa": "^0.11.0",
     "util.promisify": "^1.0.0"
   },
   "optionalDependencies": {
