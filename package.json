@@ -69,7 +69,8 @@
     "listr": "^0.14.0",
     "meow": "^5.0.0",
     "strong-ursa": "^0.11.0",
-    "util.promisify": "^1.0.0"
+    "util.promisify": "^1.0.0",
+    "verror": "^1.10.0"
   },
   "optionalDependencies": {
     "keytar": "^4.1.0"

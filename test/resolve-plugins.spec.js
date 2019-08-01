@@ -33,6 +33,16 @@ describe('Resolve Plugins', function () {
         should.exist(result);
         result.should.deep.equal([]);
       });
+
+      it('should handle a simple single dependency free plugin', () => {
+        const plugin = {};
+
+        loadPluginStub.onFirstCall().returns(plugin);
+
+        const result = resolvePluginTree(['foo'], loadPluginStub);
+        should.exist(result);
+        result.should.have.property(0, plugin);
+      });
     });
 
     describe('plugin loading', () => {
@@ -53,6 +63,72 @@ describe('Resolve Plugins', function () {
         should.Throw(() => {
           resolvePluginTree(['foo', 'bar'], loadPluginStub);
         }, /Plugin missing: "bar"/);
+      });
+
+      it('should wrap errors thrown when loading', () => {
+        loadPluginStub.throws();
+
+        should.Throw(() => {
+          resolvePluginTree(['foo'], loadPluginStub);
+        }, /Failed to load plugin "foo"/);
+      });
+    });
+
+    describe('dependency tree', () => {
+      it('should load subdependencies and order dependencies to fulfill prior dependencies', () => {
+        loadPluginStub.withArgs('foo').returns({
+          name: 'foo',
+          plugins: ['xyz', 'abc']
+        });
+        loadPluginStub.withArgs('xyz').returns({
+          name: 'xyz',
+          plugins: ['bar']
+        });
+        loadPluginStub.withArgs('abc').returns({
+          name: 'abc'
+        });
+        loadPluginStub.withArgs('bar').returns({
+          name: 'bar'
+        });
+
+        const result = resolvePluginTree(['foo', 'bar'], loadPluginStub);
+        should.exist(result);
+        result.should.deep.equal([
+          {
+            name: 'bar'
+          },
+          {
+            name: 'xyz',
+            plugins: [
+              'bar'
+            ]
+          },
+          {
+            name: 'abc'
+          },
+          {
+            name: 'foo',
+            plugins: [
+              'xyz',
+              'abc'
+            ]
+          }
+        ]);
+      });
+
+      it('should throw on circular dependencies', () => {
+        loadPluginStub.withArgs('foo').returns({
+          name: 'foo',
+          plugins: ['bar']
+        });
+        loadPluginStub.withArgs('bar').returns({
+          name: 'bar',
+          plugins: ['foo']
+        });
+
+        should.Throw(() => {
+          resolvePluginTree(['foo'], loadPluginStub);
+        }, /Failed to add plugin "bar"/);
       });
     });
   });
