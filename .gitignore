@@ -3,7 +3,6 @@
 /docs
 /node_modules
 /.env
-/.nyc_output
 
 # Please..
 .DS_Store
