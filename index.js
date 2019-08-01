@@ -3,7 +3,9 @@
 
 'use strict';
 
-const PluginSystem = require('@hdsydsvenskan/plugin-system');
+const { resolvePluginTree } = require('./lib/utils/resolve-plugins');
+
+const validPluginName = /[a-z][a-z0-9-]*/;
 
 /**
  * @typedef BaseConfig
@@ -28,20 +30,12 @@ const PluginSystem = require('@hdsydsvenskan/plugin-system');
 /**
  * @param {EnvSyncConfig} config
  */
-class EnvSync extends PluginSystem {
-  /**
-   * @param {EnvSyncConfig} config
-   * @returns {void}
-   */
-  setConfig (config) {
-    const {
-      plugins
-    } = config;
+const envSync = function (config) {
+  const {
+    plugins
+  } = config;
 
-    for (const plugin of plugins) {
-      this.addPlugin(plugin);
-    }
-  }
+  const resolvedPlugins = resolvePluginTree(plugins);
 }
 
 module.exports = envSync;

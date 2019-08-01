@@ -23,7 +23,7 @@ describe('Resolve Plugins', function () {
 
   describe('resolvePluginTree()', () => {
     describe('basic', () => {
-      it('should require plugin list to be an array',() => {
+      it('should require plugin list to be an array', () => {
         return resolvePluginTree()
           .should.be.rejectedWith(/Expected plugins to be an array of strings/);
       });
@@ -80,11 +80,11 @@ describe('Resolve Plugins', function () {
       it('should load subdependencies and order dependencies to fulfill prior dependencies', async () => {
         loadPluginStub.withArgs('foo').returns({
           name: 'foo',
-          plugins: ['xyz', 'abc']
+          dependencies: ['xyz', 'abc']
         });
         loadPluginStub.withArgs('xyz').returns({
           name: 'xyz',
-          plugins: ['bar']
+          dependencies: ['bar']
         });
         loadPluginStub.withArgs('abc').returns({
           name: 'abc'
@@ -101,7 +101,7 @@ describe('Resolve Plugins', function () {
           },
           {
             name: 'xyz',
-            plugins: [
+            dependencies: [
               'bar'
             ]
           },
@@ -110,7 +110,7 @@ describe('Resolve Plugins', function () {
           },
           {
             name: 'foo',
-            plugins: [
+            dependencies: [
               'xyz',
               'abc'
             ]
@@ -121,15 +121,32 @@ describe('Resolve Plugins', function () {
       it('should throw on circular dependencies', () => {
         loadPluginStub.withArgs('foo').returns({
           name: 'foo',
-          plugins: ['bar']
+          dependencies: ['bar']
         });
         loadPluginStub.withArgs('bar').returns({
           name: 'bar',
-          plugins: ['foo']
+          dependencies: ['foo']
         });
 
         return resolvePluginTree(['foo'], loadPluginStub)
           .should.be.rejectedWith(/Failed to add plugin "bar"/);
+      });
+
+      it('should allow optional dependencies by default', async () => {
+        loadPluginStub.withArgs('foo').returns(undefined);
+        loadPluginStub.withArgs('bar').returns('abc123');
+
+        const result = await resolvePluginTree(['foo?', 'bar'], loadPluginStub);
+        should.exist(result);
+        result.should.deep.equal([false, 'abc123']);
+      });
+
+      it('should be possible to prohibit optional dependencies', () => {
+        loadPluginStub.withArgs('foo').returns(undefined);
+        loadPluginStub.withArgs('bar').returns('abc123');
+
+        return resolvePluginTree(['foo?', 'bar'], loadPluginStub, { allowOptionalDependencies: false })
+          .should.be.rejectedWith(/Plugin missing: "foo\?"/);
       });
     });
   });
