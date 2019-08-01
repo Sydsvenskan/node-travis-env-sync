@@ -162,7 +162,7 @@ const getTokens = (tokens) => {
       const prompts = [];
 
       Object.keys(tokens).forEach(resultName => {
-        const [ tokenIdentifier, tokenDescription, envVar ] = tokens[resultName] || [];
+        const [tokenIdentifier, tokenDescription, envVar] = tokens[resultName] || [];
 
         if (!tokenIdentifier) { return; }
 
