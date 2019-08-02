@@ -3,74 +3,17 @@
 
 'use strict';
 
-const flatMap = require('array.prototype.flatmap');
-
-const { deepClone } = require('@hdsydsvenskan/utils');
-
 const { importPluginsFrom } = require('./lib/utils/import-plugin');
 const { resolvePluginOrder } = require('./lib/utils/resolve-plugins');
+const { resolveTargetConfig } = require('./lib/config');
+const { resolveNeededSecrets } = require('./lib/secrets');
 
-/** @typedef {import('./lib/utils/resolve-plugins').PluginDefinition} PluginDefinition */
-
-/**
- * @typedef BaseConfig
- * @property {string[]} [plugins]
- * @property {string[]} [extends]
- */
+/** @typedef {import('./lib/config').ResolvedTargetConfig} ResolvedTargetConfig */
+/** @typedef {import('./lib/config').EnvSyncConfig} EnvSyncConfig */
+/** @typedef {import('./lib/types').EnvSyncPluginDefinition} EnvSyncPluginDefinition */
 
 /**
- * @typedef TargetConfig
- * @property {string[]} repos
- * @property {string} [name]
- * @property {BaseConfig} [config]
- */
-
-/**
- * @typedef FullConfigExtras
- * @property {string} baseDir
- */
-
-/**
- * @typedef FullTargetConfigExtras
- * @property {BaseConfig & FullConfigExtras} [config]
- */
-
-/** @typedef {TargetConfig & FullTargetConfigExtras} FullTargetConfig */
-
-/**
- * @typedef TopConfigExtras
- * @property {TargetConfig | TargetConfig[]} target
- */
-
-/** @typedef {BaseConfig & TopConfigExtras & FullConfigExtras} EnvSyncConfig */
-
-/**
- * @param {TargetConfig} targetConfig
- * @param {EnvSyncConfig} mainConfig
- * @returns {FullTargetConfig}
- */
-const resolveTargetConfig = (targetConfig, { baseDir, plugins }) => {
-  /** @type {FullTargetConfig} */
-  // @ts-ignore
-  const mergedConfig = deepClone(targetConfig);
-
-  if (!mergedConfig.config) {
-    mergedConfig.config = { baseDir, plugins };
-  } else {
-    Object.assign(mergedConfig.config, {
-      baseDir,
-      plugins: [
-        ...(plugins || []),
-        ...(targetConfig.config.plugins || [])
-      ]
-    });
-  }
-
-  return mergedConfig;
-};
-
-/**
- * @param {FullTargetConfig} targetConfig
+ * @param {ResolvedTargetConfig} targetConfig
  */
 const envSyncTarget = async function (targetConfig) {
   const {
@@ -79,13 +22,13 @@ const envSyncTarget = async function (targetConfig) {
   } = targetConfig.config;
 
   const pluginLoader = importPluginsFrom(baseDir, { prefix: 'envsync-plugin-' });
+
+  /** @type {EnvSyncPluginDefinition[]} */
   const resolvedPlugins = await resolvePluginOrder(plugins, pluginLoader);
 
-  // TODO: Check that all used secrets have a secret provider + check that not two plugins provide the same secret
-  const secrets = flatMap(resolvedPlugins, plugin => plugin.secrets || []);
-  const secretProviders = flatMap(resolvedPlugins, plugin => Object.keys(plugin.secretProvider || {}));
+  const neededSecrets = resolveNeededSecrets(resolvedPlugins);
 
-  console.log('🙂', resolvedPlugins, secrets, secretProviders);
+  console.log('🙂', resolvedPlugins, neededSecrets);
 };
 
 /**
