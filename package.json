@@ -19,6 +19,7 @@
     "check:dependency-check": "dependency-check *.js 'lib/**/*.js' 'test/**/*.js' --no-dev",
     "check:installed-check": "installed-check -e -i eslint",
     "check:eslint": "eslint .",
+    "check:typescript": "tsc",
     "check": "run-p check:*",
     "test:mocha": "NODE_ENV=test nyc --reporter=lcov --reporter text mocha test/**/*.spec.js",
     "test": "run-s check test:*"
