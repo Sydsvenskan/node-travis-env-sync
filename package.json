@@ -66,6 +66,8 @@
     "array.prototype.flatmap": "^1.2.1",
     "chalk": "^2.3.0",
     "clone": "^2.1.1",
+    "cosmiconfig": "^5.2.1",
+    "debug": "^4.1.1",
     "deepmerge": "^3.0.0",
     "fast-deep-equal": "^2.0.0",
     "get-stdin": "^6.0.0",
