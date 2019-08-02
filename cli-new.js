@@ -13,20 +13,27 @@ const {
 initEnvSync({
   baseDir: __dirname,
   plugins: ['./lib/plugins/travis']
-})
-  .then(async (result) => {
-    const {
-      targets,
-      secrets
-    } = result;
+}).then(async (result) => {
+  const {
+    targets,
+    secrets
+  } = result;
 
-    console.log('💪', targets, secrets);
+  const secretNames = Object.keys(secrets);
 
-    for (const target of targets) {
-      doEnvSync(target);
-    }
-  }).catch(err => {
-    // eslint-disable-next-line no-console
-    console.error(err.stack);
-    process.exit(1);
-  });
+  if (secretNames) {
+    console.log('Lets resolve some secrets!');
+  }
+
+  console.log('💪', targets, secrets);
+
+  const resolvedEnv = {};
+
+  for (const target of targets) {
+    doEnvSync(target, resolvedEnv);
+  }
+}).catch(err => {
+  // eslint-disable-next-line no-console
+  console.error(err.stack);
+  process.exit(1);
+});

@@ -21,6 +21,12 @@ const { resolveNeededSecrets } = require('./lib/secrets');
 /** @typedef {ResolvedTargetConfig & EnvSyncTargetExtras} EnvSyncTarget */
 
 /**
+ * @typedef EnvSyncSetup
+ * @property {EnvSyncTarget[]} targets
+ * @property {{[secret: string]: EnvSyncPluginDefinition}} secrets
+ */
+
+/**
  * @param {ResolvedTargetConfig} targetConfig
  * @returns {Promise<EnvSyncTarget>}
  */
@@ -46,7 +52,7 @@ const initEnvSyncTarget = async function (targetConfig) {
 
 /**
  * @param {EnvSyncConfig} config
- * @returns {Promise<{ targets: EnvSyncTarget[], secrets: {[secret: string]: EnvSyncPluginDefinition} }>}
+ * @returns {Promise<EnvSyncSetup>}
  */
 const initEnvSync = async function (config) {
   if (typeof config !== 'object') throw new TypeError('Expected config to be an object');
@@ -69,14 +75,18 @@ const initEnvSync = async function (config) {
     {}
   );
 
-  return { targets: groups, secrets };
+  return {
+    targets: groups,
+    secrets
+  };
 };
 
 /**
  * @param {EnvSyncTarget} target
  * @param {Object<string,any>} [envData]
+ * @param {{ statusCallback?: (step, plugin, message) => void }} [options]
  */
-const doEnvSync = async function (target, envData = {}) {
+const doEnvSync = async function (target, envData = {}, { statusCallback }) {
   console.log('🤔', target, envData);
 };
 
