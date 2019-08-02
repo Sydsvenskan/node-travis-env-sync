@@ -13,9 +13,18 @@ const { resolveNeededSecrets } = require('./lib/secrets');
 /** @typedef {import('./lib/types').EnvSyncPluginDefinition} EnvSyncPluginDefinition */
 
 /**
- * @param {ResolvedTargetConfig} targetConfig
+ * @typedef EnvSyncTargetExtras
+ * @property {EnvSyncPluginDefinition[]} plugins
+ * @property {{[secret: string]: EnvSyncPluginDefinition}} secrets
  */
-const envSyncTarget = async function (targetConfig) {
+
+/** @typedef {ResolvedTargetConfig & EnvSyncTargetExtras} EnvSyncTarget */
+
+/**
+ * @param {ResolvedTargetConfig} targetConfig
+ * @returns {Promise<EnvSyncTarget>}
+ */
+const initEnvSyncTarget = async function (targetConfig) {
   const {
     baseDir,
     plugins
@@ -24,29 +33,54 @@ const envSyncTarget = async function (targetConfig) {
   const pluginLoader = importPluginsFrom(baseDir, { prefix: 'envsync-plugin-' });
 
   /** @type {EnvSyncPluginDefinition[]} */
-  const resolvedPlugins = await resolvePluginsInOrder(plugins, pluginLoader);
+  const resolvedPlugins = plugins ? await resolvePluginsInOrder(plugins, pluginLoader) : [];
 
   const neededSecrets = resolveNeededSecrets(resolvedPlugins);
 
-  console.log('🙂', resolvedPlugins, neededSecrets);
+  return {
+    ...targetConfig,
+    plugins: resolvedPlugins,
+    secrets: neededSecrets
+  };
 };
 
 /**
  * @param {EnvSyncConfig} config
+ * @returns {Promise<{ targets: EnvSyncTarget[], secrets: {[secret: string]: EnvSyncPluginDefinition} }>}
  */
-const envSync = async function (config) {
+const initEnvSync = async function (config) {
+  if (typeof config !== 'object') throw new TypeError('Expected config to be an object');
+
   const {
     target
   } = config;
 
   const targetGroups = Array.isArray(target) ? target : [target];
 
-  await Promise.all(
+  const groups = await Promise.all(
     targetGroups.map(
       targetConfig =>
-        envSyncTarget(resolveTargetConfig(targetConfig, config))
+        initEnvSyncTarget(resolveTargetConfig(targetConfig, config))
     )
   );
+
+  const secrets = groups.reduce(
+    (result, group) => Object.assign(result, group.secrets),
+    {}
+  );
+
+  return { targets: groups, secrets };
 };
 
-module.exports = envSync;
+/**
+ * @param {EnvSyncTarget} target
+ * @param {Object<string,any>} [envData]
+ */
+const doEnvSync = async function (target, envData = {}) {
+  console.log('🤔', target, envData);
+};
+
+module.exports = {
+  initEnvSync,
+  doEnvSync
+};
