@@ -12,7 +12,7 @@ chai.use(chaiAsPromised);
 const should = chai.should();
 
 describe('Resolve Plugins', () => {
-  const { resolvePluginOrder } = require('../lib/utils/resolve-plugins');
+  const { resolvePluginsInOrder } = require('../lib/utils/resolve-plugins');
 
   let loadPluginStub;
 
@@ -24,22 +24,22 @@ describe('Resolve Plugins', () => {
     sinon.restore();
   });
 
-  describe('resolvePluginOrder()', () => {
+  describe('resolvePluginsInOrder()', () => {
     describe('basic', () => {
       it('should require plugin list to be an array', () => {
         // @ts-ignore
-        return resolvePluginOrder()
+        return resolvePluginsInOrder()
           .should.be.rejectedWith(/Expected plugins to be an array of strings/);
       });
 
       it('should require loadPlugin to be a function', () => {
         // @ts-ignore
-        return resolvePluginOrder(['foo'])
+        return resolvePluginsInOrder(['foo'])
           .should.be.rejectedWith(/Expected loadPlugin to be a function/);
       });
 
       it('should return an empty plugin list straight up', async () => {
-        const result = await resolvePluginOrder([], loadPluginStub);
+        const result = await resolvePluginsInOrder([], loadPluginStub);
         should.exist(result);
         result.should.deep.equal([]);
       });
@@ -49,7 +49,7 @@ describe('Resolve Plugins', () => {
 
         loadPluginStub.onFirstCall().returns(plugin);
 
-        const result = await resolvePluginOrder(['foo'], loadPluginStub);
+        const result = await resolvePluginsInOrder(['foo'], loadPluginStub);
         should.exist(result);
         result.should.have.property('0', plugin);
       });
@@ -61,7 +61,7 @@ describe('Resolve Plugins', () => {
         loadPluginStub.onSecondCall().returns({});
         loadPluginStub.onThirdCall().returns(undefined);
 
-        return resolvePluginOrder(['foo', 'bar', 'abc'], loadPluginStub)
+        return resolvePluginsInOrder(['foo', 'bar', 'abc'], loadPluginStub)
           .should.be.rejectedWith(/Plugins missing: "foo", "abc"/);
       });
 
@@ -69,14 +69,14 @@ describe('Resolve Plugins', () => {
         loadPluginStub.onFirstCall().returns({});
         loadPluginStub.onSecondCall().returns(undefined);
 
-        return resolvePluginOrder(['foo', 'bar'], loadPluginStub)
+        return resolvePluginsInOrder(['foo', 'bar'], loadPluginStub)
           .should.be.rejectedWith(/Plugin missing: "bar"/);
       });
 
       it('should wrap errors thrown when loading', () => {
         loadPluginStub.throws();
 
-        return resolvePluginOrder(['foo'], loadPluginStub)
+        return resolvePluginsInOrder(['foo'], loadPluginStub)
           .should.be.rejectedWith(/Failed to load plugin "foo"/);
       });
     });
@@ -98,7 +98,7 @@ describe('Resolve Plugins', () => {
           name: 'bar'
         });
 
-        const result = await resolvePluginOrder(['foo', 'bar'], loadPluginStub);
+        const result = await resolvePluginsInOrder(['foo', 'bar'], loadPluginStub);
         should.exist(result);
         result.should.deep.equal([
           {
@@ -133,7 +133,7 @@ describe('Resolve Plugins', () => {
           dependencies: ['foo']
         });
 
-        return resolvePluginOrder(['foo'], loadPluginStub)
+        return resolvePluginsInOrder(['foo'], loadPluginStub)
           .should.be.rejectedWith(/Failed to add plugin "bar"/);
       });
 
@@ -141,7 +141,7 @@ describe('Resolve Plugins', () => {
         loadPluginStub.withArgs('foo').returns(undefined);
         loadPluginStub.withArgs('bar').returns('abc123');
 
-        const result = await resolvePluginOrder(['foo?', 'bar'], loadPluginStub);
+        const result = await resolvePluginsInOrder(['foo?', 'bar'], loadPluginStub);
         should.exist(result);
         result.should.deep.equal([false, 'abc123']);
       });
@@ -150,7 +150,7 @@ describe('Resolve Plugins', () => {
         loadPluginStub.withArgs('foo').returns(undefined);
         loadPluginStub.withArgs('bar').returns('abc123');
 
-        return resolvePluginOrder(['foo?', 'bar'], loadPluginStub, { allowOptionalDependencies: false })
+        return resolvePluginsInOrder(['foo?', 'bar'], loadPluginStub, { allowOptionalDependencies: false })
           .should.be.rejectedWith(/Plugin missing: "foo\?"/);
       });
     });

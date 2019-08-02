@@ -4,7 +4,7 @@
 'use strict';
 
 const { importPluginsFrom } = require('./lib/utils/import-plugin');
-const { resolvePluginOrder } = require('./lib/utils/resolve-plugins');
+const { resolvePluginsInOrder } = require('./lib/utils/resolve-plugins');
 const { resolveTargetConfig } = require('./lib/config');
 const { resolveNeededSecrets } = require('./lib/secrets');
 
@@ -24,7 +24,7 @@ const envSyncTarget = async function (targetConfig) {
   const pluginLoader = importPluginsFrom(baseDir, { prefix: 'envsync-plugin-' });
 
   /** @type {EnvSyncPluginDefinition[]} */
-  const resolvedPlugins = await resolvePluginOrder(plugins, pluginLoader);
+  const resolvedPlugins = await resolvePluginsInOrder(plugins, pluginLoader);
 
   const neededSecrets = resolveNeededSecrets(resolvedPlugins);
 
