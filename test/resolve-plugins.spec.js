@@ -1,3 +1,6 @@
+// @ts-check
+/// <reference types="node" />
+
 'use strict';
 
 const chai = require('chai');
@@ -8,8 +11,8 @@ chai.use(chaiAsPromised);
 
 const should = chai.should();
 
-describe('Resolve Plugins', function () {
-  const { resolvePluginTree } = require('../lib/utils/resolve-plugins');
+describe('Resolve Plugins', () => {
+  const { resolvePluginOrder } = require('../lib/utils/resolve-plugins');
 
   let loadPluginStub;
 
@@ -21,20 +24,22 @@ describe('Resolve Plugins', function () {
     sinon.restore();
   });
 
-  describe('resolvePluginTree()', () => {
+  describe('resolvePluginOrder()', () => {
     describe('basic', () => {
       it('should require plugin list to be an array', () => {
-        return resolvePluginTree()
+        // @ts-ignore
+        return resolvePluginOrder()
           .should.be.rejectedWith(/Expected plugins to be an array of strings/);
       });
 
       it('should require loadPlugin to be a function', () => {
-        return resolvePluginTree(['foo'])
+        // @ts-ignore
+        return resolvePluginOrder(['foo'])
           .should.be.rejectedWith(/Expected loadPlugin to be a function/);
       });
 
       it('should return an empty plugin list straight up', async () => {
-        const result = await resolvePluginTree([], loadPluginStub);
+        const result = await resolvePluginOrder([], loadPluginStub);
         should.exist(result);
         result.should.deep.equal([]);
       });
@@ -44,9 +49,9 @@ describe('Resolve Plugins', function () {
 
         loadPluginStub.onFirstCall().returns(plugin);
 
-        const result = await resolvePluginTree(['foo'], loadPluginStub);
+        const result = await resolvePluginOrder(['foo'], loadPluginStub);
         should.exist(result);
-        result.should.have.property(0, plugin);
+        result.should.have.property('0', plugin);
       });
     });
 
@@ -56,7 +61,7 @@ describe('Resolve Plugins', function () {
         loadPluginStub.onSecondCall().returns({});
         loadPluginStub.onThirdCall().returns(undefined);
 
-        return resolvePluginTree(['foo', 'bar', 'abc'], loadPluginStub)
+        return resolvePluginOrder(['foo', 'bar', 'abc'], loadPluginStub)
           .should.be.rejectedWith(/Plugins missing: "foo", "abc"/);
       });
 
@@ -64,14 +69,14 @@ describe('Resolve Plugins', function () {
         loadPluginStub.onFirstCall().returns({});
         loadPluginStub.onSecondCall().returns(undefined);
 
-        return resolvePluginTree(['foo', 'bar'], loadPluginStub)
+        return resolvePluginOrder(['foo', 'bar'], loadPluginStub)
           .should.be.rejectedWith(/Plugin missing: "bar"/);
       });
 
       it('should wrap errors thrown when loading', () => {
         loadPluginStub.throws();
 
-        return resolvePluginTree(['foo'], loadPluginStub)
+        return resolvePluginOrder(['foo'], loadPluginStub)
           .should.be.rejectedWith(/Failed to load plugin "foo"/);
       });
     });
@@ -93,7 +98,7 @@ describe('Resolve Plugins', function () {
           name: 'bar'
         });
 
-        const result = await resolvePluginTree(['foo', 'bar'], loadPluginStub);
+        const result = await resolvePluginOrder(['foo', 'bar'], loadPluginStub);
         should.exist(result);
         result.should.deep.equal([
           {
@@ -128,7 +133,7 @@ describe('Resolve Plugins', function () {
           dependencies: ['foo']
         });
 
-        return resolvePluginTree(['foo'], loadPluginStub)
+        return resolvePluginOrder(['foo'], loadPluginStub)
           .should.be.rejectedWith(/Failed to add plugin "bar"/);
       });
 
@@ -136,7 +141,7 @@ describe('Resolve Plugins', function () {
         loadPluginStub.withArgs('foo').returns(undefined);
         loadPluginStub.withArgs('bar').returns('abc123');
 
-        const result = await resolvePluginTree(['foo?', 'bar'], loadPluginStub);
+        const result = await resolvePluginOrder(['foo?', 'bar'], loadPluginStub);
         should.exist(result);
         result.should.deep.equal([false, 'abc123']);
       });
@@ -145,7 +150,7 @@ describe('Resolve Plugins', function () {
         loadPluginStub.withArgs('foo').returns(undefined);
         loadPluginStub.withArgs('bar').returns('abc123');
 
-        return resolvePluginTree(['foo?', 'bar'], loadPluginStub, { allowOptionalDependencies: false })
+        return resolvePluginOrder(['foo?', 'bar'], loadPluginStub, { allowOptionalDependencies: false })
           .should.be.rejectedWith(/Plugin missing: "foo\?"/);
       });
     });
