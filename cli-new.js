@@ -22,15 +22,14 @@ initEnvSync({
   const secretNames = Object.keys(secrets);
 
   if (secretNames) {
+    // FIXME: Resolve some secrets!
     console.log('Lets resolve some secrets!');
   }
-
-  console.log('💪', targets, secrets);
 
   const resolvedEnv = {};
 
   for (const target of targets) {
-    doEnvSync(target, resolvedEnv);
+    doEnvSync(target, resolvedEnv, { statusCallback: (...params) => { console.log('😁', ...params); } });
   }
 }).catch(err => {
   // eslint-disable-next-line no-console
