@@ -61,7 +61,6 @@
   },
   "dependencies": {
     "@hapi/topo": "^3.1.2",
-    "@hdsydsvenskan/plugin-system": "^1.0.0",
     "array.prototype.flatmap": "^1.2.1",
     "chalk": "^2.3.0",
     "clone": "^2.1.1",
