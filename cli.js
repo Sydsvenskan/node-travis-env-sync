@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// FIXME: Remove these linting disabling
+/* eslint-disable unicorn/catch-error-name, quote-props, no-unused-vars */
+
 'use strict';
 
 const chalk = require('chalk');
