@@ -76,6 +76,7 @@
     "got": "^9.0.0",
     "import-from": "^3.0.0",
     "inquirer": "^6.0.0",
+    "is-plain-obj": "^2.0.0",
     "js-yaml": "^3.10.0",
     "json-diff": "^0.5.2",
     "listr": "^0.14.0",

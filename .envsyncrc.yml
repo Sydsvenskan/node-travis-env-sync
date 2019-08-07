@@ -1,3 +1,6 @@
 # FIXME: Remove this temporary test config!
 plugins:
+  - "./lib/plugins/env"
   - "./lib/plugins/travis"
+target:
+  name: main

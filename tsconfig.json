@@ -1,5 +1,6 @@
 {
   "files": [
+    "cli-new.js",
     "cli.js",
     "index.js"
   ],
