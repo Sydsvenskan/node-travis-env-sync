@@ -1,5 +1,9 @@
 // @ts-check
 /// <reference types="node" />
+/// <reference types="mocha" />
+/// <reference types="chai" />
+/// <reference types="sinon" />
+/// <reference types="sinon-chai" />
 
 'use strict';
 

@@ -1,6 +1,10 @@
 # FIXME: Remove this temporary test config!
 plugins:
+  - "./lib/plugins/secrets"
   - "./lib/plugins/env"
   - "./lib/plugins/travis"
 target:
   name: main
+settings:
+  secrets:
+    travis: true

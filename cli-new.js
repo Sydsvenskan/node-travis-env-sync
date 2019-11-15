@@ -1,10 +1,9 @@
-#!/usr/bin/env node
-
-'use strict';
-
 // @ts-check
 /// <reference types="node" />
 
+'use strict';
+
+/** @typedef {import('./lib/config').EnvSyncConfig} EnvSyncConfig */
 /** @typedef {import('./lib/types').EnvData} EnvData */
 
 const { resolve: pathResolve } = require('path');
@@ -54,6 +53,7 @@ explorer.search(baseDir).then(async foundConfig => {
     throw new Error('Couldn\'t find a config file');
   }
 
+  /** @type {EnvSyncConfig} */
   const config = Object.assign({}, foundConfig.config, { baseDir });
 
   debug('Resolved config: %O', config);
@@ -70,7 +70,7 @@ explorer.search(baseDir).then(async foundConfig => {
 
   /** @type {EnvData} */
   const resolvedEnv = {
-    secrets: await resolveCliSecrets({ debug, plugins, secrets })
+    secrets: await resolveCliSecrets({ debug, plugins, secrets, config })
   };
 
   for (const target of targets) {
@@ -85,5 +85,6 @@ explorer.search(baseDir).then(async foundConfig => {
 }).catch(err => {
   // eslint-disable-next-line no-console
   console.error('An error occured:', err.stack);
+  // eslint-disable-next-line unicorn/no-process-exit
   process.exit(1);
 });

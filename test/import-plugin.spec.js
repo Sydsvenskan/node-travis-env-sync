@@ -1,5 +1,6 @@
 // @ts-check
 /// <reference types="node" />
+/// <reference types="mocha" />
 /// <reference types="chai" />
 /// <reference types="sinon" />
 /// <reference types="sinon-chai" />
@@ -28,9 +29,9 @@ describe('Import Plugin', () => {
 
     it('should require a string pluginName argument', () => {
       // @ts-ignore
-      should.Throw(() => { normalizePluginName(); }, 'Invalid pluginName, expected a non-empty string');
+      should.Throw(() => { normalizePluginName(); }, TypeError, 'Invalid pluginName, expected a non-empty string');
       // @ts-ignore
-      should.Throw(() => { normalizePluginName(123); }, 'Invalid pluginName, expected a non-empty string');
+      should.Throw(() => { normalizePluginName(123); }, TypeError, 'Invalid pluginName, expected a non-empty string');
     });
 
     it('should throw on upwards directory traversing', () => {
