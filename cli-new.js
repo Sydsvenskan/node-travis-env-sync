@@ -70,7 +70,7 @@ explorer.search(baseDir).then(async foundConfig => {
 
   /** @type {EnvData} */
   const resolvedEnv = {
-    secrets: resolveCliSecrets({ debug, plugins, secrets })
+    secrets: await resolveCliSecrets({ debug, plugins, secrets })
   };
 
   for (const target of targets) {
