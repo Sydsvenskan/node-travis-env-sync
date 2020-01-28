@@ -14,11 +14,10 @@ notifications:
     on_pull_requests: false
     rooms:
       - secure: >-
-          E68rTQpdvyLWt3j1M79ss2mxWE9eqkdHhTl8545ewvRMJ3P80uiLr2v/2ZcJ0bNJNsqCy888wnzj3KWUztxuSv8ENv8LGDe6OrzinZhgPUvjmd9/MU2/S9M804rykGPr6tpq/kFgEajyVt6KRG9TQdeUorrTatJZyYPa1BONM7/6XVMyyAtFezu0sMx9ALjEntKAP6ejm2Qw3cetXvN5QXVLyMCAXgLXAvo+FCzgP9W8Kl9Kzo8Hn6V10JUcMiwxccJABVOOywRsFbfJyf0xsaAEhsMEl9rJ4xYuCVvxO5QksKWlinqD4uIt1aipiGv6LC/FrWz+vSxiuca6ztorhqBtXCZEC/H4NiDCagWFuzvG0lCgqYDN57pAYwobDkiaazUfAHozvXFrYhwfYCccgQdyeghil2Nh4iqaVoKk5kbdqOEao2/xvuayrW7WE3PwN6lou4SFo30FBv3IHpziHMWbBYSH/mSJE9gYdwFbd9m30JOyv7eBR+XdSBnB5RkbA8TPHSeVo4r7ZzJpo1daFfge5B8jp2jnUkhVXnCnKZgIy2lcjAQ/tcVn5h1n70fntSEC8va9BGucmlozg5ZP5/LhGjlGKizLSkZHiMsctuv82HzaL1ss/hplph6k2tOGR4o3dhHNzc66i5ETdKI1NK2w3lkGmJDOzgLgPePgggQ=
+          0YcBDyZGfJ/ZTdn+dWa2DVoiBIyqEPQ6tgaBc79XTGg9FnKK1xiqmB189dmD7PYzFKg5AO0+OZYe5EtywOhTfHV9o86nwSOhifYSexPLIixgEECm9opV0zzck6GH09csvtA77yYfmhTK648R0wRhN4Hlz4haxmvWiXk4s5Jk76T1q2owZtyEo/WMkt6JbePYLJzEHiltW63MWzkFF2PN+kzGbmPbMFc2NyUs+5vLNUSWRKXpGe0RIP7rAqDh+9/HSEofeb+GidXdzwm2/+qJ0LzRd6QmZh7y6ahaGQtyQgpX/hVe1mQkK3pRU/OsnY/YxzYQfZ6fbTHpfCqxNiJvDkVD38AcEnDk3fkfcEDmDEQ0uYFRO1uUyfgOl9T4utOIt76mxrs0oPoIc4e1YxMgKkRu2vn5zWrvtMJOULvxyx4DxvLkIaqQMJoW7pL+iFkCG02IBJEyfBYHmUQDCLiDJGqIoP+IZd6Dq6+hzzI1UH1j6xnkFZpeHlgFnIeOCNAg2AqyLWjzgQV1vrjIAbRLiwxCdDpv134RIyf5EWbkUCaO0IvWO4bhEWGgJH3RDycDASmRk7ocpx5EBur+/m8OpgWC8wwQiaaN8yVNmuwKdRimChwJSt7KxRkoIGab2YnQ9WMOM91i3L6DGd5dYLKpVjjKA9wJ5C0N11QJ+H9FyBg=
   email: false
 before_install:
   - 'echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > .npmrc'
 node_js:
   - '12'
   - '10'
-  - '8'
