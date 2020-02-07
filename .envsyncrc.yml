@@ -13,4 +13,4 @@ target:
     - bar
 settings:
   settings-secrets:
-    travis: true
+    travis: 'a very secret thing'
