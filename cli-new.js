@@ -48,7 +48,7 @@ debug('Looking for config in: %s', baseDir);
 
 const explorer = cosmiconfig('envsync', { stopDir: baseDir });
 
-explorer.search(baseDir).then(async foundConfig => {
+explorer.search(baseDir).then(/** @param {any} foundConfig */ async foundConfig => {
   if (!foundConfig) {
     throw new Error('Couldn\'t find a config file');
   }
@@ -82,7 +82,7 @@ explorer.search(baseDir).then(async foundConfig => {
   }
 
   debug('Syncing complete');
-}).catch(err => {
+}).catch(/** @param {Error} err */ err => {
   // eslint-disable-next-line no-console
   console.error('An error occured:', err.stack);
   // eslint-disable-next-line unicorn/no-process-exit
