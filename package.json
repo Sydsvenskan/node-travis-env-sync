@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@hdsydsvenskan/eslint-config-hds": "^12.1.0",
+    "@types/array.prototype.flatmap": "^1.2.1",
     "@types/clone": "^0.1.30",
     "@types/debug": "^4.1.5",
     "@types/got": "^9.6.5",
@@ -66,7 +67,6 @@
   "dependencies": {
     "@hapi/topo": "^3.1.2",
     "@hdsydsvenskan/utils": "^4.0.3",
-    "@types/array.prototype.flatmap": "^1.2.1",
     "array.prototype.flatmap": "^1.2.1",
     "chalk": "^2.3.0",
     "clone": "^2.1.1",
