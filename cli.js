@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+
+// FIXME: Remove these linting disabling
+/* eslint-disable unicorn/catch-error-name, quote-props, no-unused-vars */
+
 'use strict';
 
 const chalk = require('chalk');
@@ -6,9 +10,9 @@ const meow = require('meow');
 const Listr = require('listr');
 const inquirer = require('inquirer');
 const ghGot = require('gh-got');
-const travisGot = require('./lib/travis-got');
+const travisGot = require('./lib/utils/travis-got');
 const GitHubPublisher = require('github-publish');
-const rsa = require('ursa');
+const rsa = require('strong-ursa');
 const yaml = require('js-yaml');
 const clone = require('clone');
 const deepEqual = require('fast-deep-equal');
@@ -162,7 +166,7 @@ const getTokens = (tokens) => {
       const prompts = [];
 
       Object.keys(tokens).forEach(resultName => {
-        const [ tokenIdentifier, tokenDescription, envVar ] = tokens[resultName] || [];
+        const [tokenIdentifier, tokenDescription, envVar] = tokens[resultName] || [];
 
         if (!tokenIdentifier) { return; }
 

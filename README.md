@@ -1,3 +1,7 @@
+# 2.x dev note
+
+Try with: `DEBUG=envsync node cli-new.js`
+
 # Travis-Env-Sync
 
 Syncs Travis settings and `.travis.yml` across a large number of repositories

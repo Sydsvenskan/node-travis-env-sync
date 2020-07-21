@@ -1,0 +1,16 @@
+# FIXME: Remove this temporary test config!
+plugins:
+  - "./lib/plugins/env"
+  - "./lib/plugins/settings-secrets"
+  - "./lib/plugins/travis"
+target:
+  name: main
+  config:
+    settings:
+      yay: true
+  repos:
+    - foo
+    - bar
+settings:
+  settings-secrets:
+    travis: 'a very secret thing'
