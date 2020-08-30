@@ -43,7 +43,7 @@
     "get-stdin": "^6.0.0",
     "gh-got": "^8.0.0",
     "github-publish": "^3.0.0",
-    "got": "^9.0.0",
+    "got": "^11.0.0",
     "inquirer": "^6.0.0",
     "js-yaml": "^3.10.0",
     "json-diff": "^0.5.2",
