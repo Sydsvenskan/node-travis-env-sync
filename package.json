@@ -53,6 +53,6 @@
     "util.promisify": "^1.0.0"
   },
   "optionalDependencies": {
-    "keytar": "^4.1.0"
+    "keytar": "^7.0.0"
   }
 }
