@@ -44,7 +44,7 @@
     "gh-got": "^8.0.0",
     "github-publish": "^3.0.0",
     "got": "^9.0.0",
-    "inquirer": "^6.0.0",
+    "inquirer": "^8.0.0",
     "js-yaml": "^3.10.0",
     "json-diff": "^0.5.2",
     "listr": "^0.14.0",
