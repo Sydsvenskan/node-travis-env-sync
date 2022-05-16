@@ -36,7 +36,7 @@
     "installed-check": "^2.2.0"
   },
   "dependencies": {
-    "chalk": "^2.3.0",
+    "chalk": "^5.0.0",
     "clone": "^2.1.1",
     "deepmerge": "^3.0.0",
     "fast-deep-equal": "^2.0.0",
